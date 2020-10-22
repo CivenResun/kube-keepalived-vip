@@ -402,7 +402,7 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
 		ipt:         iptInterface,
 		vrid:        vrid,
 		proxyMode:   proxyMode,
-		notify:     notify,
+		notify:      notify,
 		releaseVips: releaseVips,
 	}
 

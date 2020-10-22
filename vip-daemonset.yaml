@@ -1,16 +1,25 @@
-apiVersion: extensions/v1beta1
 kind: DaemonSet
+apiVersion: apps/v1
 metadata:
   name: kube-keepalived-vip
+  namespace: kube-system
+  labels:
+    k8s-app: kube-keepalived-vip
 spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-keepalived-vip
   template:
     metadata:
       labels:
-        name: kube-keepalived-vip
+        k8s-app: kube-keepalived-vip
     spec:
+      serviceAccountName: kube-vip
       hostNetwork: true
+      nodeSelector:
+        lb: nginx
       containers:
-        - image: aledbf/kube-keepalived-vip:0.35
+        - image: 10.10.101.175/library/kube-keepalived-vip:0.35
           name: kube-keepalived-vip
           imagePullPolicy: IfNotPresent
           livenessProbe:
