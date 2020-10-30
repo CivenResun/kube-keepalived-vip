@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: vip-configmap
 data:
-  10.4.0.50: default/echoheaders
+  10.100.100.180: keepalived/nginx-sidecar:DR

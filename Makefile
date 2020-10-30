@@ -1,4 +1,4 @@
-all: push
+GGall: push
 
 # 0.0 shouldn't clobber any release builds
 TAG = 0.35

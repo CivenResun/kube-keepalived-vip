@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    nephele/annotation: ""
+    node-pool-labels: '{"system":"true"}'
+    node-pool-taints: '[{"effect":"NoSchedule","key":"harm.cn/system","value":""}]'
+  labels:
+    node-pool-mutating-webhook: enabled
+  name: keepalived

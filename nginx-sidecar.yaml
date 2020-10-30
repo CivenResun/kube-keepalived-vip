@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-sidecar
+  namespace: keepalived
+  labels:
+    app: nginx-sidecar
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    nodePort: 30302
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: nginx-sidecar
+

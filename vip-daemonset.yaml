@@ -1,8 +1,8 @@
-kind: DaemonSet
 apiVersion: apps/v1
+kind: DaemonSet
 metadata:
   name: kube-keepalived-vip
-  namespace: kube-system
+  namespace: keepalived
   labels:
     k8s-app: kube-keepalived-vip
 spec:
@@ -13,12 +13,15 @@ spec:
     metadata:
       labels:
         k8s-app: kube-keepalived-vip
+        app: nginx-sidecar
     spec:
-      serviceAccountName: kube-vip
+      serviceAccount: kube-vip
       hostNetwork: true
-      nodeSelector:
-        lb: nginx
       containers:
+        - name: nginx-sidecar
+          image: onlineshop/nginx
+          ports:
+          - containerPort: 80
         - image: 10.10.101.175/library/kube-keepalived-vip:0.35
           name: kube-keepalived-vip
           imagePullPolicy: IfNotPresent
@@ -60,4 +63,4 @@ spec:
           hostPath:
             path: /dev
       #nodeSelector:
-      #  type: worker
+      #      #  type: worker
