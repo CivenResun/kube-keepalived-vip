@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/debian-base-amd64:0.1
+FROM 10.100.100.200/library/debian-base-amd64:0.1
 
 RUN clean-install \
   libssl1.1 \
