@@ -64,7 +64,7 @@ vrrp_instance vips {
 {{ else }}
 # Service: {{ $svc.Name }}
 virtual_server {{ $svc.IP }} {{ $svc.Port }} {
-  delay_loop 5
+  delay_loop 6
   lvs_sched rr
   lvs_method {{ $svc.LVSMethod }}
   protocol {{ $svc.Protocol }}
