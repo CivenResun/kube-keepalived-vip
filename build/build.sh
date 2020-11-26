@@ -50,6 +50,7 @@ get_src $SHA256 \
   "https://github.com/acassen/keepalived/archive/v$VERSION.tar.gz"
 
 cd keepalived-$VERSION
+mkdir m4 && mkdir build-aux
 
 aclocal
 autoheader
