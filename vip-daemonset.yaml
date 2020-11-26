@@ -24,7 +24,7 @@ spec:
           - containerPort: 80
         - image: 10.10.101.175/library/kube-keepalived-vip:0.35
           name: kube-keepalived-vip
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           livenessProbe:
             httpGet:
               path: /health
