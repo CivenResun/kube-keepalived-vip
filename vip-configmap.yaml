@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: vip-configmap
 data:
-  10.100.100.180: keepalived/nginx-sidecar:DR
+  10.100.100.196: keepalived/nginx-sidecar:DR
