@@ -14,7 +14,7 @@ GO_LIST_FILES=$(shell go list ${PKG}/... | grep -v vendor)
 controller: clean
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-s -w' \
 	-o rootfs/kube-keepalived-vip \
-	${PKG}/pkg/cmd
+	./pkg/cmd
 
 container: controller keepalived
 	docker build -t $(PREFIX):$(TAG) rootfs
