@@ -16,6 +16,15 @@ spec:
         app: nginx-sidecar
     spec:
       serviceAccount: kube-vip
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: lb
+                operator: NotIn
+                values:
+                - nginx
       hostNetwork: true
       containers:
         - name: nginx-sidecar
