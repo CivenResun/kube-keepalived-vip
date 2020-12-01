@@ -491,6 +491,7 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
             }
         },
         DeleteFunc: func(obj interface{}) {
+            upCmap := obj.(*apiv1.ConfigMap)
             mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
             if mapKey == ipvsc.configMapName {
                 dummy0, err := netlink.LinkByName("dummy0")
