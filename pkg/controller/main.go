@@ -416,31 +416,10 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
 
 	mapEventHandler := cache.ResourceEventHandlerFuncs{
         AddFunc: func(obj interface{}) {
-            //ip link add dummy0 type dummy
-            _, err = netlink.LinkByName("dummy0")
-            if err != nil {
-                newNetLink := netlink.NewLinkAttrs()
-                newNetLink.Name = "dummy0"
-                myDummy := &netlink.Dummy{LinkAttrs: newNetLink}
-                err = netlink.LinkAdd(myDummy)
-                if err != nil {
-                    glog.Fatalf("Error creating Netlink information: %v", err)
-                }
-            }
-            dummy0, _ := netlink.LinkByName("dummy0")
-
             upCmap := obj.(*apiv1.ConfigMap)
-            for externIP, _ := range upCmap.Data {
-                    addr, _ := netlink.ParseAddr(externIP + "/32")
-                    netlink.AddrAdd(dummy0, addr)
-            }
-
-        },
-        UpdateFunc: func(old, cur interface{}) {
-            if !reflect.DeepEqual(old, cur) {
-                upCmap := cur.(*apiv1.ConfigMap)
-                mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
-
+            mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+            
+            if mapKey == ipvsc.configMapName {
                 //ip link add dummy0 type dummy
                 _, err = netlink.LinkByName("dummy0")
                 if err != nil {
@@ -453,11 +432,36 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
                     }
                 }
                 dummy0, _ := netlink.LinkByName("dummy0")
+    
+                
+                for externIP, _ := range upCmap.Data {
+                        addr, _ := netlink.ParseAddr(externIP + "/32")
+                        netlink.AddrAdd(dummy0, addr)
+                }
+            }
+        },
+        UpdateFunc: func(old, cur interface{}) {
+            if !reflect.DeepEqual(old, cur) {
+                upCmap := cur.(*apiv1.ConfigMap)
+                mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
 
                 // updates to configuration configmaps can trigger an update
                 if mapKey == ipvsc.configMapName {
                     oldCmap := old.(*apiv1.ConfigMap)
                     var delIP, addIP, oldIP, newIP []string
+                    //ip link add dummy0 type dummy
+                    _, err = netlink.LinkByName("dummy0")
+                    if err != nil {
+                        newNetLink := netlink.NewLinkAttrs()
+                        newNetLink.Name = "dummy0"
+                        myDummy := &netlink.Dummy{LinkAttrs: newNetLink}
+                        err = netlink.LinkAdd(myDummy)
+                        if err != nil {
+                            glog.Fatalf("Error creating Netlink information: %v", err)
+                        }
+                    }
+                    dummy0, _ := netlink.LinkByName("dummy0")
+                    
                     for externIP, _ := range oldCmap.Data {
                         oldIP = append(oldIP, externIP)
                     }
@@ -487,15 +491,18 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
             }
         },
         DeleteFunc: func(obj interface{}) {
-            dummy0, err := netlink.LinkByName("dummy0")
-
-            if err == nil {
-                upCmap := obj.(*apiv1.ConfigMap)
-                for externIP, _ := range upCmap.Data {
-                    addr, _ := netlink.ParseAddr(externIP + "/32")
-                    netlink.AddrDel(dummy0, addr)
+            mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+            if mapKey == ipvsc.configMapName {
+                dummy0, err := netlink.LinkByName("dummy0")
+                if err == nil {
+                    upCmap := obj.(*apiv1.ConfigMap)
+                    for externIP, _ := range upCmap.Data {
+                        addr, _ := netlink.ParseAddr(externIP + "/32")
+                        netlink.AddrDel(dummy0, addr)
+                    }
                 }
             }
+            
         },
     }
 
