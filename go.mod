@@ -37,4 +37,5 @@ require (
 	k8s.io/kubernetes v1.14.0
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7
 	sigs.k8s.io/yaml v1.1.0 // indirect
+	github.com/vishvananda/netlink latest
 )
