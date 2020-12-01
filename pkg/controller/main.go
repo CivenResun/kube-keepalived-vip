@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/vishvananda/netlink"
 
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -414,17 +415,90 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
 	}
 
 	mapEventHandler := cache.ResourceEventHandlerFuncs{
-		UpdateFunc: func(old, cur interface{}) {
-			if !reflect.DeepEqual(old, cur) {
-				upCmap := cur.(*apiv1.ConfigMap)
-				mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
-				// updates to configuration configmaps can trigger an update
-				if mapKey == ipvsc.configMapName {
-					ipvsc.syncQueue.Enqueue(cur)
-				}
-			}
-		},
-	}
+        AddFunc: func(obj interface{}) {
+            //ip link add dummy0 type dummy
+            _, err = netlink.LinkByName("dummy0")
+            if err != nil {
+                newNetLink := netlink.NewLinkAttrs()
+                newNetLink.Name = "dummy0"
+                myDummy := &netlink.Dummy{LinkAttrs: newNetLink}
+                err = netlink.LinkAdd(myDummy)
+                if err != nil {
+                    glog.Fatalf("Error creating Netlink information: %v", err)
+                }
+            }
+            dummy0, _ := netlink.LinkByName("dummy0")
+
+            upCmap := obj.(*apiv1.ConfigMap)
+            for externIP, _ := range upCmap.Data {
+                    addr, _ := netlink.ParseAddr(externIP + "/32")
+                    netlink.AddrAdd(dummy0, addr)
+            }
+
+        },
+        UpdateFunc: func(old, cur interface{}) {
+            if !reflect.DeepEqual(old, cur) {
+                upCmap := cur.(*apiv1.ConfigMap)
+                mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+
+                //ip link add dummy0 type dummy
+                _, err = netlink.LinkByName("dummy0")
+                if err != nil {
+                    newNetLink := netlink.NewLinkAttrs()
+                    newNetLink.Name = "dummy0"
+                    myDummy := &netlink.Dummy{LinkAttrs: newNetLink}
+                    err = netlink.LinkAdd(myDummy)
+                    if err != nil {
+                        glog.Fatalf("Error creating Netlink information: %v", err)
+                    }
+                }
+                dummy0, _ := netlink.LinkByName("dummy0")
+
+                // updates to configuration configmaps can trigger an update
+                if mapKey == ipvsc.configMapName {
+                    oldCmap := old.(*apiv1.ConfigMap)
+                    var delIP, addIP, oldIP, newIP []string
+                    for externIP, _ := range oldCmap.Data {
+                        oldIP = append(oldIP, externIP)
+                    }
+                    for externIP, _ := range upCmap.Data {
+                        newIP = append(newIP, externIP)
+                    }
+                    for _, oldV := range oldIP {
+                        if !StringContains(newIP, oldV) {
+                            delIP = append(delIP, oldV)
+                        }
+                    }
+                    for _, newV := range newIP {
+                        if !StringContains(oldIP, newV) {
+                            addIP = append(addIP, newV)
+                        }
+                    }
+                    for _, add := range addIP {
+                        addr, _ := netlink.ParseAddr(add + "/32")
+                        netlink.AddrAdd(dummy0, addr)
+                    }
+                    for _, del := range delIP {
+                        addr, _ := netlink.ParseAddr(del + "/32")
+                        netlink.AddrDel(dummy0, addr)
+                    }
+                    ipvsc.syncQueue.Enqueue(cur)
+                }
+            }
+        },
+        DeleteFunc: func(obj interface{}) {
+            dummy0, err := netlink.LinkByName("dummy0")
+
+            if err == nil {
+                upCmap := obj.(*apiv1.ConfigMap)
+                for externIP, _ := range upCmap.Data {
+                    addr, _ := netlink.ParseAddr(externIP + "/32")
+                    netlink.AddrDel(dummy0, addr)
+                }
+            }
+        },
+    }
+
 
 	eventHandlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
