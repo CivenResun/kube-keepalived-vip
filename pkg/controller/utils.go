@@ -22,6 +22,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"errors"
 
 	"github.com/golang/glog"
 
@@ -254,7 +255,7 @@ func parseNodeSelector(data map[string]string) string {
 	return nodeSelector(data).String()
 }
 
-func StringContains(array []string, val string) (isExist bool) {
+func stringContains(array []string, val string) (isExist bool) {
         for i := 0; i < len(array); i++ {
                 if array[i] == val {
                         return true
@@ -263,3 +264,13 @@ func StringContains(array []string, val string) (isExist bool) {
         return false
 }
 
+func addIPMask(val string) (IPMask string, err error) {
+	ipAndMask := strings.Split(val, "/")
+	if len(ipAndMask) == 1 {
+		return val + "/32", nil
+	} else if len(ipAndMask) == 2 {
+		return val, nil
+	}
+	err = errors.New("THIS IS INVALID IP: " + val)
+	return "", err
+}
