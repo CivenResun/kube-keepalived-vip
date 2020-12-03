@@ -469,12 +469,12 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
                         newIP = append(newIP, externIP)
                     }
                     for _, oldV := range oldIP {
-                        if !StringContains(newIP, oldV) {
+                        if !stringContains(newIP, oldV) {
                             delIP = append(delIP, oldV)
                         }
                     }
                     for _, newV := range newIP {
-                        if !StringContains(oldIP, newV) {
+                        if !stringContains(oldIP, newV) {
                             addIP = append(addIP, newV)
                         }
                     }
