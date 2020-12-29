@@ -17,12 +17,12 @@ limitations under the License.
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
 	"sort"
 	"strings"
-	"errors"
 
 	"github.com/golang/glog"
 
@@ -273,4 +273,47 @@ func addIPMask(val string) (IPMask string, err error) {
 	}
 	err = errors.New("THIS IS INVALID IP: " + val)
 	return "", err
+}
+
+
+func getDelAdd(oldResult []string, newResult []string) (bool, []string, []string){
+	isSame := false
+	var delIP, addIP []string
+	for _, oldV := range oldResult {
+		if !stringContains(newResult, oldV) {
+			delIP = append(delIP, oldV)
+		}
+	}
+	for _, newV := range newResult {
+		if !stringContains(oldResult, newV) {
+			addIP = append(addIP, newV)
+		}
+	}
+	if delIP == nil && addIP == nil {
+		isSame = true
+	}
+	return isSame, delIP, addIP
+}
+
+func getResultVIP(ipvsc *ipvsControllerController) []string {
+	ns, name, err := parseNsName(ipvsc.configMapName)
+	if err != nil {
+		glog.Warningf("%v", err)
+		return nil
+	}
+
+	cfgMap, err := ipvsc.getConfigMap(ns, name)
+	if err != nil {
+		glog.Errorf("unexpected error searching configmap %v: %v", ipvsc.configMapName, err)
+		return nil
+	}
+	svcs := ipvsc.getServices(cfgMap)
+
+	var result []string
+	for _, svc := range svcs {
+		if svc.LVSMethod == "NAT" {
+			result = appendIfMissing(result, svc.IP + "/32")
+		}
+	}
+	return result
 }

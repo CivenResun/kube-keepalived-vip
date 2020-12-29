@@ -47,6 +47,8 @@ import (
 	utiliptables "k8s.io/kubernetes/pkg/util/iptables"
 	utilexec "k8s.io/utils/exec"
 
+	"github.com/aledbf/kube-keepalived-vip/pkg/ipset"
+	"github.com/aledbf/kube-keepalived-vip/pkg/iptables"
 	"github.com/aledbf/kube-keepalived-vip/pkg/k8s"
 	"github.com/aledbf/kube-keepalived-vip/pkg/store"
 	"github.com/aledbf/kube-keepalived-vip/pkg/task"
@@ -315,6 +317,32 @@ func (ipvsc *ipvsControllerController) Start() {
 		}
 	}()
 
+	oldResult := getResultVIP(ipvsc)
+	go func() {
+		//创建一个周期性的定时器
+		ticker := time.NewTicker(10 * time.Second)
+		for {
+			//从定时器中获取数据
+			<-ticker.C
+			iptables.InitIPtables()
+			ipset.InitVIPSet()
+
+			newResult := getResultVIP(ipvsc)
+			isSame, delIP, addIP := getDelAdd(oldResult, newResult)
+			if !isSame {
+				err := ipset.RefreshIPSet(addIP)
+				if err != nil {
+					glog.Errorf("Adding ipset entry err: %v", err)
+				}
+				err = ipset.DelIPSet(delIP)
+				if err != nil {
+					glog.Errorf("Deleting ipset entry err: %v", err)
+				}
+			}
+			oldResult = newResult
+		}
+	}()
+
 	glog.Info("starting keepalived to announce VIPs")
 	ipvsc.keepalived.Start()
 }
@@ -418,7 +446,7 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
         AddFunc: func(obj interface{}) {
             upCmap := obj.(*apiv1.ConfigMap)
             mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
-            
+
             if mapKey == ipvsc.configMapName {
                 //ip link add dummy0 type dummy
                 _, err = netlink.LinkByName("dummy0")
@@ -432,8 +460,8 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
                     }
                 }
                 dummy0, _ := netlink.LinkByName("dummy0")
-    
-                
+
+
                 for externIP, _ := range upCmap.Data {
                         addr, _ := netlink.ParseAddr(externIP + "/32")
                         netlink.AddrAdd(dummy0, addr)
@@ -461,7 +489,7 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
                         }
                     }
                     dummy0, _ := netlink.LinkByName("dummy0")
-                    
+
                     for externIP, _ := range oldCmap.Data {
                         oldIP = append(oldIP, externIP)
                     }
@@ -503,7 +531,7 @@ func NewIPVSController(kubeClient *kubernetes.Clientset, namespace string, useUn
                     }
                 }
             }
-            
+
         },
     }
 
