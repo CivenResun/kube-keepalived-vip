@@ -3,7 +3,7 @@ module github.com/aledbf/kube-keepalived-vip
 go 1.12
 
 require (
-    github.com/Sirupsen/logrus v0.0.0-00010101000000-000000000000
+	github.com/Sirupsen/logrus v0.0.0-00010101000000-000000000000
 	github.com/coreos/go-iptables v0.4.5
 	github.com/coreos/go-semver v0.3.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -24,10 +24,10 @@ require (
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0 // indirect
+	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5 // indirect
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3 // indirect
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a // indirect
-	golang.org/x/sys v0.0.0-20190405154228-4b34438f7a67 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -40,6 +40,6 @@ require (
 	k8s.io/kubernetes v1.14.0
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7
 	sigs.k8s.io/yaml v1.1.0 // indirect
-	github.com/vishvananda/netlink v1.1.0
 )
+
 replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.0.4

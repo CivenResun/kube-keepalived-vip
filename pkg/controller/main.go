@@ -324,8 +324,10 @@ func (ipvsc *ipvsControllerController) Start() {
 		for {
 			//从定时器中获取数据
 			<-ticker.C
-			iptables.InitIPtables()
+			//why new IPSet?
 			ipset.InitVIPSet()
+			iptables.InitIPtables()
+
 
 			newResult := getResultVIP(ipvsc)
 			isSame, delIP, addIP := getDelAdd(oldResult, newResult)
